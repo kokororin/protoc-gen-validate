@@ -112,8 +112,9 @@ func (e {{ errname . }}) ErrorName() string { return "{{ errname . }}" }
 // Error satisfies the builtin error interface
 func (e {{ errname . }}) Error() string {
 	cause := ""
+    causePrefix := " | caused by: "
 	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+		cause = fmt.Sprintf("%s%v", causePrefix, e.cause)
 	}
 
 	key := ""
@@ -121,8 +122,16 @@ func (e {{ errname . }}) Error() string {
 		key = "key for "
 	}
 
+    reason := ""
+    if cause != "" {
+        reason = cause
+    } else {
+        reason = e.reason
+    }
+    reason = strings.TrimPrefix(reason, causePrefix)
+
 	charCount := 0
-	for _, v := range e.reason {
+	for _, v := range reason {
 		if unicode.Is(unicode.Han, v) || unicode.Is(unicode.Katakana, v) || unicode.Is(unicode.Hiragana, v) {
 			charCount++
 			break
@@ -130,7 +139,7 @@ func (e {{ errname . }}) Error() string {
 	}
 
 	if charCount > 0 {
-		return e.reason
+		return reason
 	}
 
 	return fmt.Sprintf(
